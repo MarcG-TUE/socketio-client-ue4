@@ -1,26 +1,3 @@
-// Modifications Copyright 2018-current Getnamo. All Rights Reserved
-
-/* This disables two things:
-   1) error 4503 where MSVC complains about
-      decorated names being too long. There's no way around
-      this.
-   2) We also disable a security error triggered by
-      websocketpp not using checked iterators.
-*/
-#ifdef _MSC_VER
-#pragma warning(disable : 4503)
-#define _SCL_SECURE_NO_WARNINGS
-#endif
-
-#if !defined(LOG)
-#define LOG(x)
-#endif
-
-/* For this code, we will use standalone ASIO
-   and websocketpp in C++11 mode only */
-#define ASIO_STANDALONE
-#define _WEBSOCKETPP_CPP11_STL_
-
 #include "sio_socket.h"
 #include "internal/sio_packet.h"
 #include "internal/sio_client_impl.h"
@@ -180,9 +157,9 @@ namespace sio
         
         event_listener get_bind_listener_locked(string const& event);
         
-        void ack(int msgId, string const& name, message::list const& ack_message);
+        void ack(int msgId,string const& name,message::list const& ack_message);
         
-        void timeout_connection(const lib::error_code &ec);
+        void timeout_connection(const asio::error_code &ec);
         
         void send_connect();
         
@@ -203,7 +180,7 @@ namespace sio
         
         error_listener m_error_listener;
         
-        std::unique_ptr<asio::system_timer> m_connection_timer;
+        std::unique_ptr<asio::steady_timer> m_connection_timer;
         
         std::queue<packet> m_packet_queue;
         
@@ -294,8 +271,8 @@ namespace sio
         NULL_GUARD(m_client);
         packet p(packet::type_connect,m_nsp);
         m_client->send(p);
-        m_connection_timer.reset(new asio::system_timer(m_client->get_io_service()));
-        lib::error_code ec;
+        m_connection_timer.reset(new asio::steady_timer(m_client->get_io_service()));
+        asio::error_code ec;
         m_connection_timer->expires_from_now(std::chrono::milliseconds(20000), ec);
         m_connection_timer->async_wait(std::bind(&socket::impl::timeout_connection,this, std::placeholders::_1));
     }
@@ -310,9 +287,9 @@ namespace sio
             
             if(!m_connection_timer)
             {
-                m_connection_timer.reset(new asio::system_timer(m_client->get_io_service()));
+                m_connection_timer.reset(new asio::steady_timer(m_client->get_io_service()));
             }
-            lib::error_code ec;
+            asio::error_code ec;
             m_connection_timer->expires_from_now(std::chrono::milliseconds(3000), ec);
             m_connection_timer->async_wait(std::bind(&socket::impl::on_close, this));
         }
@@ -496,7 +473,7 @@ namespace sio
         if(m_error_listener)m_error_listener(err_message);
     }
     
-    void socket::impl::timeout_connection(const lib::error_code &ec)
+    void socket::impl::timeout_connection(const asio::error_code &ec)
     {
         NULL_GUARD(m_client);
         if(ec)

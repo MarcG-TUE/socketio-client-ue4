@@ -1,5 +1,3 @@
-// Modifications Copyright 2018-current Getnamo. All Rights Reserved
-
 #ifndef SIO_SOCKET_H
 #define SIO_SOCKET_H
 #include "sio_message.h"
@@ -45,7 +43,7 @@ namespace sio
     class packet;
     
     //The name 'socket' is taken from concept of official socket.io.
-    class SOCKETIOLIB_API socket
+    class socket
     {
     public:
         typedef std::function<void(const std::string& name,message::ptr const& message,bool need_ack, message::list& ack_message)> event_listener_aux;

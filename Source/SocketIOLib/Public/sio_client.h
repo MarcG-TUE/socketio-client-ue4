@@ -1,4 +1,3 @@
-// Modifications Copyright 2018-current Getnamo. All Rights Reserved
 //
 //  sio_client.h
 //
@@ -16,7 +15,7 @@ namespace sio
 {
     class client_impl;
     
-    class SOCKETIOLIB_API client {
+    class client {
     public:
         enum close_reason
         {
@@ -68,8 +67,6 @@ namespace sio
 
         void set_reconnect_delay_max(unsigned millis);
 
-        void set_path(const std::string& path);
-
         void set_logs_default();
 
         void set_logs_quiet();
@@ -82,15 +79,10 @@ namespace sio
         void close();
         
         void sync_close();
-
-        // stop io_service
-        void stop();
         
         bool opened() const;
         
         std::string const& get_sessionid() const;
-
-        std::string const& get_url() const;
         
     private:
         //disable copy constructor and assign operator.
@@ -98,8 +90,6 @@ namespace sio
         void operator=(client const&){}
         
         client_impl* m_impl;
-
-        std::string m_path;
     };
     
 }
