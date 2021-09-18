@@ -1,18 +1,40 @@
+// Modifications Copyright 2018-current Getnamo. All Rights Reserved
+
 #ifndef SIO_CLIENT_IMPL_H
 #define SIO_CLIENT_IMPL_H
 
-#include <cstdint>
-#ifdef _WIN32
-#define _WEBSOCKETPP_CPP11_THREAD_
-//#define _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
-#define _WEBSOCKETPP_NO_CPP11_FUNCTIONAL_
-#define INTIALIZER(__TYPE__)
-#else
-#define _WEBSOCKETPP_CPP11_STL_ 1
-#define INTIALIZER(__TYPE__) (__TYPE__)
+/* This disables two things:
+   1) error 4503 where MSVC complains about
+      decorated names being too long. There's no way around
+      this.
+   2) We also disable a security error triggered by
+      websocketpp not using checked iterators.
+*/
+#ifdef _MSC_VER
+#pragma warning(disable : 4503)
+#define _SCL_SECURE_NO_WARNINGS
 #endif
+
+/* For this code, we will use standalone ASIO
+   and websocketpp in C++11 mode only */
+#define ASIO_STANDALONE
+#define _WEBSOCKETPP_CPP11_STL_
+
+#include <cstdint>
+#define INTIALIZER(__TYPE__)
+
+#include "CoreMinimal.h" 
+
+#if PLATFORM_WINDOWS
+   //#define WIN32_LEAN_AND_MEAN
+#include "Windows/WindowsHWrapper.h"
+#include "Windows/AllowWindowsPlatformAtomics.h"
+#endif
+
 #include <websocketpp/client.hpp>
-#if _DEBUG || DEBUG
+#include <asio/system_timer.hpp>
+
+#if defined(DEBUG)
 #if SIO_TLS
 #include <websocketpp/config/debug_asio.hpp>
 typedef websocketpp::config::debug_asio_tls client_config;
@@ -21,7 +43,7 @@ typedef websocketpp::config::debug_asio_tls client_config;
 typedef websocketpp::config::debug_asio client_config;
 #endif //SIO_TLS
 #else
-#if SIO_TLS
+#if defined(SIO_TLS)
 #include <websocketpp/config/asio_client.hpp>
 typedef websocketpp::config::asio_tls_client client_config;
 #else
@@ -29,20 +51,19 @@ typedef websocketpp::config::asio_tls_client client_config;
 typedef websocketpp::config::asio_client client_config;
 #endif //SIO_TLS
 #endif //DEBUG
-
-#if SIO_TLS
-#include <asio/ssl/context.hpp>
-#endif
-
-#include <asio/steady_timer.hpp>
-#include <asio/error_code.hpp>
-#include <asio/io_service.hpp>
+#include <asio/deadline_timer.hpp>
 
 #include <memory>
 #include <map>
 #include <thread>
-#include "../sio_client.h"
+
+#include "sio_client.h"
 #include "sio_packet.h"
+
+#if PLATFORM_WINDOWS
+#include "Windows/HideWindowsPlatformAtomics.h"
+#endif
+
 
 namespace sio
 {
@@ -116,6 +137,7 @@ namespace sio
         bool opened() const { return m_con_state == con_opened; }
         
         std::string const& get_sessionid() const { return m_sid; }
+        std::string const& get_current_url() const { return m_base_url; }
 
         void set_reconnect_attempts(unsigned attempts) {m_reconn_attempts = attempts;}
 
@@ -182,7 +204,7 @@ namespace sio
 
         void clear_timers();
         
-        #if SIO_TLS
+        #if defined(SIO_TLS)
         typedef websocketpp::lib::shared_ptr<asio::ssl::context> context_ptr;
         
         context_ptr on_tls_init(connection_hdl con);

@@ -15,7 +15,7 @@ namespace sio
 {
     class client_impl;
     
-    class client {
+    class SOCKETIOLIB_API client {
     public:
         enum close_reason
         {
@@ -81,7 +81,9 @@ namespace sio
         void sync_close();
         
         bool opened() const;
-        
+
+        std::string const& get_url() const;
+
         std::string const& get_sessionid() const;
         
     private:

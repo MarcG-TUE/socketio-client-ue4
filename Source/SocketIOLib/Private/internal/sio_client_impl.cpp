@@ -12,14 +12,20 @@
 #include <chrono>
 #include <mutex>
 #include <cmath>
+
+#ifdef _MSC_VER
+// the LOG define below leads to a C4390 error
+#pragma warning(disable : 4390)
+#endif
+
 // Comment this out to disable handshake logging to stdout
-#if DEBUG || _DEBUG
+#if defined(DEBUG) || defined(_DEBUG)
 #define LOG(x) std::cout << x
 #else
 #define LOG(x)
 #endif
 
-#if SIO_TLS
+#if defined(SIO_TLS)
 // If using Asio's SSL support, you will also need to add this #include.
 // Source: http://think-async.com/Asio/asio-1.10.6/doc/asio/using.html
 // #include <asio/ssl/impl/src.hpp>
@@ -56,7 +62,7 @@ namespace sio
         m_client.set_close_handler(std::bind(&client_impl::on_close,this,_1));
         m_client.set_fail_handler(std::bind(&client_impl::on_fail,this,_1));
         m_client.set_message_handler(std::bind(&client_impl::on_message,this,_1,_2));
-#if SIO_TLS
+#if defined(SIO_TLS)
         m_client.set_tls_init_handler(std::bind(&client_impl::on_tls_init,this,_1));
 #endif
         m_packet_mgr.set_decode_callback(std::bind(&client_impl::on_decode,this,_1));
@@ -226,7 +232,7 @@ namespace sio
         do{
             websocketpp::uri uo(uri);
             ostringstream ss;
-#if SIO_TLS
+#if defined(SIO_TLS)
             ss<<"wss://";
 #else
             ss<<"ws://";
@@ -467,8 +473,8 @@ namespace sio
                 unsigned delay = this->next_delay();
                 if(m_reconnect_listener) m_reconnect_listener(m_reconn_made,delay);
                 m_reconn_timer.reset(new asio::steady_timer(m_client.get_io_service()));
-                asio::error_code ec;
-                m_reconn_timer->expires_from_now(milliseconds(delay), ec);
+                asio::error_code errc;
+                m_reconn_timer->expires_from_now(milliseconds(delay), errc);
                 m_reconn_timer->async_wait(std::bind(&client_impl::timeout_reconnect,this, std::placeholders::_1));
                 return;
             }
@@ -596,7 +602,7 @@ failed:
         m_packet_mgr.reset();
     }
     
-#if SIO_TLS
+#if defined(SIO_TLS)
     client_impl::context_ptr client_impl::on_tls_init(connection_hdl conn)
     {
         context_ptr ctx = context_ptr(new  asio::ssl::context(asio::ssl::context::tls));

@@ -103,7 +103,12 @@ namespace sio
     {
         return m_impl->opened();
     }
-    
+
+    std::string const& client::get_url() const
+    {
+        return m_impl->get_current_url();
+    }
+
     std::string const& client::get_sessionid() const
     {
         return m_impl->get_sessionid();
