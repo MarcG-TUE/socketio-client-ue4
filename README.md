@@ -15,3 +15,10 @@ The original version would disconnect after 25 seconds from the socket.io server
 ``` git
 git clone https://github.com/MarcG-TUE/socketio-client-ue4 --recurse-submodules
 ```
+
+## Unreal Engine 5 (UE5) version
+
+Branch `unreal-engine-5` contains a version of the plugin that works with Unreal Engine 5.0.0.After the clone above, inside the `socketio-client-ue4` folder, issue the command
+ ``` git
+ git checkout unreal-engine-5
+ ```
